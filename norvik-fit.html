@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Norvik Fit</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.js"></script>
+<style>
+:root{
+  --bg:#FBF7EF; --ink:#182620; --card:#FFFFFF; --line:#E9E2D3;
+  --saude:#1F9D5C; --saude2:#0E7C6B; --saude-soft:#E4F5EB;
+  --fin:#F2994A; --fin2:#C96F2B; --fin-soft:#FCEEDE;
+  --brand1:#1F9D5C; --brand2:#146B7A;
+  --muted:#7A7566; --danger:#D9584A;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0F1D18; --ink:#F0EDE4; --card:#182620; --line:#2B3A33;
+    --saude-soft:#173328; --fin-soft:#332415; --muted:#9B968A;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0F1D18; --ink:#F0EDE4; --card:#182620; --line:#2B3A33;
+  --saude-soft:#173328; --fin-soft:#332415; --muted:#9B968A;
+}
+*{box-sizing:border-box;}
+html{scroll-padding-top:env(safe-area-inset-top,0px); height:100%;}
+body{
+  height:100%; margin:0; background:var(--bg); color:var(--ink);
+  font-family:-apple-system,"Segoe UI",Roboto,sans-serif;
+  display:flex; flex-direction:column;
+}
+#loginScreen{
+  min-height:100%; display:flex; flex-direction:column;
+  background:radial-gradient(120% 100% at 20% 0%, var(--brand1) 0%, var(--brand2) 55%, #0B2A2F 100%);
+  color:#fff; padding:28px 24px calc(28px + env(safe-area-inset-bottom,0px));
+}
+.hero-badge{
+  align-self:flex-start; background:rgba(255,255,255,.18); border-radius:999px;
+  padding:6px 14px; font-size:12px; font-weight:600; letter-spacing:.02em; margin-bottom:22px;
+}
+.hero-illust{width:100%; max-width:280px; margin:6px auto 20px; display:block;}
+.hero-title{font-size:28px; font-weight:800; line-height:1.15; margin:0 0 8px;}
+.hero-sub{font-size:14px; opacity:.85; margin:0 0 22px; max-width:340px;}
+.login-card{
+  background:rgba(255,255,255,.97); color:var(--ink); border-radius:20px; padding:22px;
+  max-width:400px; width:100%; margin:0 auto; box-shadow:0 20px 50px rgba(0,0,0,.25);
+}
+.login-card h2{margin:0 0 4px; font-size:18px;}
+.login-card p.hint{margin:0 0 16px; font-size:12px; color:var(--muted);}
+.seg{display:flex; gap:6px; background:var(--bg); border-radius:10px; padding:4px; margin-bottom:16px;}
+.seg button{flex:1; border:none; background:transparent; padding:8px; border-radius:7px; font-size:13px; font-weight:600; color:var(--muted); cursor:pointer;}
+.seg button.on{background:#fff; color:var(--saude2); box-shadow:0 1px 3px rgba(0,0,0,.08);}
+.login-card input{margin-bottom:12px;}
+.gbtn{
+  width:100%; border:none; border-radius:11px; padding:13px; font-size:14px; font-weight:700; color:#fff; cursor:pointer;
+  background:linear-gradient(135deg, var(--brand1), var(--brand2));
+}
+.gbtn[disabled]{opacity:.6;}
+.msg{font-size:12px; margin:0 0 12px; padding:8px 10px; border-radius:8px;}
+.msg.err{background:#FBE4E1; color:#A3392B;}
+.msg.ok{background:var(--saude-soft); color:var(--saude2);}
+#app{display:none; flex-direction:column; flex:1;}
+header{
+  padding:18px 20px 0; max-width:640px; width:100%; margin:0 auto;
+  display:flex; align-items:center; justify-content:space-between; gap:12px;
+}
+.hgroup h1{font-size:20px; margin:0; font-weight:800; letter-spacing:-.01em;}
+.hgroup .sub{color:var(--muted); font-size:12px; margin:2px 0 0;}
+.headright{display:flex; align-items:center; gap:10px;}
+.avatar{
+  width:38px; height:38px; border-radius:50%; flex:none;
+  background:linear-gradient(135deg, var(--brand1), var(--fin));
+  color:#fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:15px;
+}
+.sairbtn{background:none; border:none; color:var(--muted); font-size:12px; cursor:pointer; text-decoration:underline;}
+nav{max-width:640px; width:100%; margin:14px auto 0; padding:0 20px;}
+.navwrap{display:flex; gap:6px; background:var(--card); border:1px solid var(--line); border-radius:12px; padding:4px;}
+nav button{flex:1; padding:10px 8px; border:none; border-radius:9px; background:transparent; color:var(--muted); font-size:14px; font-weight:700; cursor:pointer;}
+nav button.active.saude{background:var(--saude-soft); color:var(--saude2); box-shadow:inset 0 0 0 1px rgba(31,157,92,.25);}
+nav button.active.fin{background:var(--fin-soft); color:var(--fin2); box-shadow:inset 0 0 0 1px rgba(242,153,74,.3);}
+main{flex:1; max-width:640px; width:100%; margin:0 auto; padding:16px 20px 40px; overflow-y:auto;}
+section{display:none;}
+section.active{display:block;}
+.card{background:var(--card); border:1px solid var(--line); border-radius:16px; padding:16px; margin-bottom:14px;}
+.card h2{font-size:15px; margin:0 0 12px; font-weight:800; display:flex; align-items:center; gap:8px;}
+.icon-badge{width:26px; height:26px; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:14px; flex:none;}
+.icon-badge.s{background:var(--saude-soft);}
+.icon-badge.f{background:var(--fin-soft);}
+.row{display:flex; gap:10px; margin-bottom:10px;}
+.row > *{flex:1;}
+label{font-size:12px; color:var(--muted); display:block; margin-bottom:4px;}
+input,select{width:100%; padding:9px 10px; border:1px solid var(--line); border-radius:8px; background:var(--bg); color:var(--ink); font-size:14px;}
+button.primary{border:none; border-radius:10px; padding:11px 16px; font-size:14px; font-weight:700; cursor:pointer; color:#fff;}
+button.primary[disabled]{opacity:.6;}
+.saude-btn{background:linear-gradient(135deg, var(--saude), var(--saude2));}
+.fin-btn{background:linear-gradient(135deg, var(--fin), var(--fin2));}
+.stat-row{display:flex; gap:10px; margin-bottom:14px;}
+.stat{flex:1; border-radius:16px; padding:14px; text-align:center; color:#fff;}
+.stat.s1{background:linear-gradient(135deg, var(--saude), var(--saude2));}
+.stat.s2{background:linear-gradient(135deg, #2C7DA0, #1B4965);}
+.stat.s3{background:linear-gradient(135deg, #4FB0A5, #1F7A6B);}
+.stat.f1{background:linear-gradient(135deg, var(--fin), var(--fin2));}
+.stat.f2{background:linear-gradient(135deg, #C96F2B, #8C4A17);}
+.stat .num{font-size:20px; font-weight:800;}
+.stat .lbl{font-size:11px; opacity:.9; margin-top:2px;}
+ul.list{list-style:none; margin:0; padding:0;}
+ul.list li{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:10px 0; border-bottom:1px solid var(--line); font-size:14px;}
+ul.list li:last-child{border-bottom:none;}
+.item-main{display:flex; align-items:center; gap:10px;}
+.item-main .emoji{font-size:18px;}
+.item-main .txt{display:flex; flex-direction:column;}
+.item-main .t{font-weight:700;}
+.item-main .d{font-size:11px; color:var(--muted);}
+.val{font-weight:800; white-space:nowrap;}
+.val.neg{color:var(--danger);}
+.del{background:none; border:none; color:var(--muted); cursor:pointer; font-size:16px; padding:0 2px;}
+.empty{color:var(--muted); font-size:13px; padding:6px 0;}
+.bars{display:flex; flex-direction:column; gap:8px;}
+.bar-row{font-size:12px;}
+.bar-track{background:var(--bg); border-radius:6px; height:9px; margin-top:4px; overflow:hidden;}
+.bar-fill{height:100%; background:linear-gradient(90deg, var(--fin), var(--fin2));}
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <span class="hero-badge">Saúde + Finanças em um só app</span>
+  <svg class="hero-illust" viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="60" cy="80" r="52" fill="rgba(255,255,255,.14)"/>
+    <circle cx="190" cy="55" r="34" fill="rgba(255,255,255,.12)"/>
+    <path d="M20 90 L55 90 L65 65 L80 115 L95 90 L110 90 L120 75 L135 90 L240 90" stroke="#fff" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round" opacity=".9"/>
+    <circle cx="196" cy="112" r="22" fill="#fff" opacity=".95"/>
+    <text x="196" y="118" font-size="18" text-anchor="middle" fill="#146B7A" font-family="Arial" font-weight="bold">R$</text>
+    <circle cx="222" cy="128" r="13" fill="#fff" opacity=".8"/>
+    <text x="222" y="132" font-size="11" text-anchor="middle" fill="#146B7A" font-family="Arial" font-weight="bold">$</text>
+  </svg>
+  <h1 class="hero-title">Bem-vindo ao Norvik Fit</h1>
+  <p class="hero-sub">Cuide do treino, da alimentação e do bolso no mesmo lugar, sem complicação.</p>
+
+  <div class="login-card">
+    <div class="seg">
+      <button class="on" id="segEntrar" onclick="setModo('entrar')">Entrar</button>
+      <button id="segCriar" onclick="setModo('criar')">Criar conta</button>
+    </div>
+    <h2 id="loginTitulo">Acesse sua conta</h2>
+    <p class="hint" id="loginHint">Use seu e-mail e senha para continuar.</p>
+    <div id="loginMsg"></div>
+    <div id="campoNome" style="display:none;">
+      <label>Nome</label>
+      <input type="text" id="loginNome" placeholder="Seu nome">
+    </div>
+    <label>E-mail</label>
+    <input type="email" id="loginEmail" placeholder="voce@email.com">
+    <label>Senha</label>
+    <input type="password" id="loginSenha" placeholder="Mínimo 6 caracteres">
+    <button class="gbtn" id="btnEntrar" onclick="entrar()">Continuar</button>
+  </div>
+</div>
+
+<div id="app">
+<header>
+  <div class="hgroup">
+    <h1 id="saudacao">Olá 👋</h1>
+    <p class="sub">Saúde e finanças em um só lugar</p>
+  </div>
+  <div class="headright">
+    <button class="sairbtn" onclick="sair()">Sair</button>
+    <div class="avatar" id="avatarLetra">N</div>
+  </div>
+</header>
+<nav><div class="navwrap">
+    <button id="tabSaude" class="active saude" onclick="showTab('saude')">💪 Saúde</button>
+    <button id="tabFin" class="fin" onclick="showTab('fin')">💳 Financeiro</button>
+</div></nav>
+<main>
+
+  <section id="saude" class="active">
+    <div class="stat-row">
+      <div class="stat s1"><div class="num" id="calHoje">0</div><div class="lbl">kcal hoje</div></div>
+      <div class="stat s2"><div class="num" id="imcVal">—</div><div class="lbl">IMC</div></div>
+      <div class="stat s3"><div class="num" id="metaAgua">2000</div><div class="lbl">meta água (ml)</div></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-badge s">🧍</span>Meu perfil</h2>
+      <div class="row">
+        <div><label>Peso atual (kg)</label><input type="number" id="peso" step="0.1" placeholder="70"></div>
+        <div><label>Altura (cm)</label><input type="number" id="altura" placeholder="175"></div>
+      </div>
+      <button class="primary saude-btn" onclick="salvarPerfil()">Salvar perfil</button>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-badge s">🍽️</span>Registrar refeição</h2>
+      <div class="row">
+        <div>
+          <label>Tipo</label>
+          <select id="tipoRefeicao">
+            <option value="cafe_da_manha">Café da manhã</option>
+            <option value="almoco">Almoço</option>
+            <option value="jantar">Jantar</option>
+            <option value="lanche">Lanche</option>
+          </select>
+        </div>
+        <div><label>Calorias</label><input type="number" id="calorias" placeholder="450"></div>
+      </div>
+      <label>Alimento</label>
+      <input type="text" id="nomeAlimento" placeholder="Ex: arroz, feijão e frango" style="margin-bottom:10px;">
+      <button class="primary saude-btn" onclick="addRefeicao()">Adicionar refeição</button>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-badge s">📋</span>Refeições de hoje</h2>
+      <ul class="list" id="listaRefeicoes"><li class="empty">Carregando...</li></ul>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-badge s">🏋️</span>Registrar treino</h2>
+      <div class="row">
+        <div><label>Nome do treino</label><input type="text" id="nomeTreino" placeholder="Treino A - Peito e tríceps"></div>
+      </div>
+      <button class="primary saude-btn" onclick="addTreino()">Concluir treino</button>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-badge s">🔥</span>Últimos treinos</h2>
+      <ul class="list" id="listaTreinos"><li class="empty">Carregando...</li></ul>
+    </div>
+  </section>
+
+  <section id="fin">
+    <div class="stat-row">
+      <div class="stat f1"><div class="num" id="saldoMes">R$ 0</div><div class="lbl">saldo do mês</div></div>
+      <div class="stat f2"><div class="num" id="totalRecorrente">R$ 0</div><div class="lbl">contas fixas</div></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-badge f">💸</span>Nova transação</h2>
+      <div class="row">
+        <div><label>Descrição</label><input type="text" id="descricao" placeholder="Ex: Netflix, Aluguel..."></div>
+        <div><label>Valor (R$)</label><input type="number" id="valor" step="0.01" placeholder="49.90"></div>
+      </div>
+      <div class="row">
+        <div>
+          <label>Categoria</label>
+          <select id="categoria"></select>
+        </div>
+        <div>
+          <label>Dia de vencimento (opcional)</label>
+          <input type="number" id="diaVenc" min="1" max="31" placeholder="10">
+        </div>
+      </div>
+      <div class="row" style="align-items:center;">
+        <label style="display:flex; align-items:center; gap:6px; font-size:13px; color:var(--ink);">
+          <input type="checkbox" id="recorrente" style="width:auto;"> É recorrente (assinatura/conta fixa)
+        </label>
+      </div>
+      <button class="primary fin-btn" onclick="addTransacao()">Adicionar transação</button>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-badge f">🧾</span>Transações do mês</h2>
+      <ul class="list" id="listaTransacoes"><li class="empty">Carregando...</li></ul>
+    </div>
+
+    <div class="card">
+      <h2><span class="icon-badge f">📊</span>Gastos por categoria</h2>
+      <div class="bars" id="barsCategoria"><p class="empty">Carregando...</p></div>
+    </div>
+  </section>
+
+</main>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dtssexbeqvtxssztzaad.supabase.co';
+const SUPABASE_KEY = 'sb_publishable_xtbtdpNojOEiLeoZfRYfKg_RdEYU93_';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let modoLogin = 'entrar';
+let currentUser = null;
+let categorias = [];
+let cacheRefeicoes = [];
+let cacheTreinos = [];
+let cacheTransacoes = [];
+let cachePerfil = {};
+
+function hojeISO(){ return new Date().toISOString().slice(0,10); }
+function inicioMesISO(){ const n=new Date(); return new Date(n.getFullYear(), n.getMonth(), 1).toISOString(); }
+function fmtMoeda(v){ return 'R$ ' + Number(v).toFixed(2).replace('.', ','); }
+const rotulos = {cafe_da_manha:'Café da manhã', almoco:'Almoço', jantar:'Jantar', lanche:'Lanche'};
+const emojiRefeicao = {cafe_da_manha:'☕', almoco:'🍛', jantar:'🍲', lanche:'🥪'};
+const emojiCategoria = {'Contas Fixas da Casa':'🏠','Assinaturas & Streaming':'📺','Alimentação & Mercado':'🛒','Transporte & Veículo':'🚗','Outros Gastos':'💰'};
+
+function setModo(m){
+  modoLogin = m;
+  document.getElementById('segEntrar').classList.toggle('on', m==='entrar');
+  document.getElementById('segCriar').classList.toggle('on', m==='criar');
+  document.getElementById('loginTitulo').textContent = m==='entrar' ? 'Acesse sua conta' : 'Crie sua conta';
+  document.getElementById('loginHint').textContent = m==='entrar' ? 'Use seu e-mail e senha para continuar.' : 'Leva menos de 1 minuto.';
+  document.getElementById('campoNome').style.display = m==='criar' ? 'block' : 'none';
+  document.getElementById('loginMsg').innerHTML = '';
+}
+
+function mostrarMsg(texto, tipo){
+  document.getElementById('loginMsg').innerHTML = `<p class="msg ${tipo}">${texto}</p>`;
+}
+
+async function entrar(){
+  const email = document.getElementById('loginEmail').value.trim();
+  const senha = document.getElementById('loginSenha').value;
+  const nome = document.getElementById('loginNome').value.trim();
+  const btn = document.getElementById('btnEntrar');
+  if(!email || !senha){ mostrarMsg('Preencha e-mail e senha.', 'err'); return; }
+  btn.disabled = true;
+  try{
+    if(modoLogin === 'criar'){
+      const { data, error } = await sb.auth.signUp({ email, password: senha, options: { data: { nome: nome || 'Usuário' } } });
+      if(error){ mostrarMsg(error.message, 'err'); return; }
+      if(data.session){ await abrirApp(data.user); }
+      else{ mostrarMsg('Conta criada! Confirme seu e-mail e depois faça login.', 'ok'); setModo('entrar'); }
+    } else {
+      const { data, error } = await sb.auth.signInWithPassword({ email, password: senha });
+      if(error){ mostrarMsg(error.message, 'err'); return; }
+      await abrirApp(data.user);
+    }
+  } finally { btn.disabled = false; }
+}
+
+async function sair(){
+  await sb.auth.signOut();
+  location.reload();
+}
+
+async function abrirApp(user){
+  currentUser = user;
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('app').style.display = 'flex';
+
+  const { data: perfilRow } = await sb.from('usuarios').select('*').eq('id', user.id).single();
+  cachePerfil = perfilRow || {};
+  document.getElementById('saudacao').textContent = 'Olá, ' + (cachePerfil.nome || 'Usuário') + ' 👋';
+  document.getElementById('avatarLetra').textContent = (cachePerfil.nome || 'U').charAt(0).toUpperCase();
+
+  const { data: cats } = await sb.from('categorias_fin').select('*').order('id');
+  categorias = cats || [];
+  document.getElementById('categoria').innerHTML = categorias.map(c => `<option value="${c.id}">${c.nome}</option>`).join('');
+
+  await carregarSaude();
+  await carregarFinanceiro();
+}
+
+function showTab(t){
+  document.getElementById('saude').classList.toggle('active', t==='saude');
+  document.getElementById('fin').classList.toggle('active', t==='fin');
+  document.getElementById('tabSaude').classList.toggle('active', t==='saude');
+  document.getElementById('tabFin').classList.toggle('active', t==='fin');
+}
+
+function salvarPerfil(){
+  const peso = parseFloat(document.getElementById('peso').value);
+  const altura = parseInt(document.getElementById('altura').value);
+  sb.from('usuarios').update({ peso_atual: peso || cachePerfil.peso_atual, altura: altura || cachePerfil.altura })
+    .eq('id', currentUser.id).then(()=> carregarSaude());
+}
+
+async function carregarSaude(){
+  const { data: perfilRow } = await sb.from('usuarios').select('*').eq('id', currentUser.id).single();
+  cachePerfil = perfilRow || {};
+  document.getElementById('peso').value = cachePerfil.peso_atual || '';
+  document.getElementById('altura').value = cachePerfil.altura || '';
+  if(cachePerfil.peso_atual && cachePerfil.altura){
+    const h = cachePerfil.altura/100;
+    document.getElementById('imcVal').textContent = (cachePerfil.peso_atual/(h*h)).toFixed(1);
+  }
+
+  const { data: refs } = await sb.from('refeicoes').select('*').eq('usuario_id', currentUser.id).eq('data_registro', hojeISO()).order('id', { ascending:false });
+  cacheRefeicoes = refs || [];
+  document.getElementById('calHoje').textContent = cacheRefeicoes.reduce((s,r)=>s+r.calorias,0);
+  const listaRef = document.getElementById('listaRefeicoes');
+  listaRef.innerHTML = cacheRefeicoes.length ? '' : '<li class="empty">Nenhuma refeição registrada hoje.</li>';
+  cacheRefeicoes.forEach(r=>{
+    listaRef.innerHTML += `<li><div class="item-main"><span class="emoji">${emojiRefeicao[r.tipo_refeicao]}</span><div class="txt"><span class="t">${r.nome_alimento}</span><span class="d">${rotulos[r.tipo_refeicao]}</span></div></div>
+      <div style="display:flex; align-items:center; gap:8px;"><span class="val">${r.calorias} kcal</span><button class="del" onclick="removerRefeicao('${r.id}')">✕</button></div></li>`;
+  });
+
+  const { data: treinos } = await sb.from('treinos_usuario').select('*').eq('usuario_id', currentUser.id).order('concluido_em', { ascending:false }).limit(8);
+  cacheTreinos = treinos || [];
+  const listaTr = document.getElementById('listaTreinos');
+  listaTr.innerHTML = cacheTreinos.length ? '' : '<li class="empty">Nenhum treino registrado ainda.</li>';
+  cacheTreinos.forEach(t=>{
+    const data = t.concluido_em ? new Date(t.concluido_em).toLocaleString('pt-BR') : '';
+    listaTr.innerHTML += `<li><div class="item-main"><span class="emoji">💪</span><div class="txt"><span class="t">${t.nome_treino}</span><span class="d">${data}</span></div></div></li>`;
+  });
+}
+
+async function addRefeicao(){
+  const tipo = document.getElementById('tipoRefeicao').value;
+  const cal = parseInt(document.getElementById('calorias').value);
+  const nome = document.getElementById('nomeAlimento').value.trim();
+  if(!cal || !nome) return;
+  await sb.from('refeicoes').insert({ usuario_id: currentUser.id, tipo_refeicao: tipo, nome_alimento: nome, calorias: cal, data_registro: hojeISO() });
+  document.getElementById('calorias').value=''; document.getElementById('nomeAlimento').value='';
+  carregarSaude();
+}
+async function removerRefeicao(id){ await sb.from('refeicoes').delete().eq('id', id); carregarSaude(); }
+
+async function addTreino(){
+  const nome = document.getElementById('nomeTreino').value.trim();
+  if(!nome) return;
+  await sb.from('treinos_usuario').insert({ usuario_id: currentUser.id, nome_treino: nome, detalhes_json: {}, concluido_em: new Date().toISOString() });
+  document.getElementById('nomeTreino').value='';
+  carregarSaude();
+}
+
+async function carregarFinanceiro(){
+  const { data: trans } = await sb.from('transacoes_fin').select('*').eq('usuario_id', currentUser.id).gte('criado_em', inicioMesISO()).order('criado_em', { ascending:false });
+  cacheTransacoes = trans || [];
+
+  const saldo = cacheTransacoes.reduce((s,t)=>s-Number(t.valor),0);
+  document.getElementById('saldoMes').textContent = fmtMoeda(saldo);
+  const recorrentes = cacheTransacoes.filter(t=>t.is_recorrente).reduce((s,t)=>s+Number(t.valor),0);
+  document.getElementById('totalRecorrente').textContent = fmtMoeda(recorrentes);
+
+  const nomeCat = id => (categorias.find(c=>c.id===id)||{}).nome || 'Outros Gastos';
+  const listaT = document.getElementById('listaTransacoes');
+  listaT.innerHTML = cacheTransacoes.length ? '' : '<li class="empty">Nenhuma transação registrada.</li>';
+  cacheTransacoes.forEach(t=>{
+    const cat = nomeCat(t.categoria_id);
+    listaT.innerHTML += `<li><div class="item-main"><span class="emoji">${emojiCategoria[cat]||'💰'}</span><div class="txt"><span class="t">${t.descricao}</span>
+      <span class="d">${cat}${t.is_recorrente ? ' · recorrente' : ''}${t.dia_vencimento ? ' · vence dia '+t.dia_vencimento : ''}</span></div></div>
+      <div style="display:flex; align-items:center; gap:8px;"><span class="val neg">-${fmtMoeda(t.valor)}</span><button class="del" onclick="removerTransacao('${t.id}')">✕</button></div></li>`;
+  });
+
+  const porCategoria = {};
+  cacheTransacoes.forEach(t=>{ const c = nomeCat(t.categoria_id); porCategoria[c] = (porCategoria[c]||0) + Number(t.valor); });
+  const max = Math.max(1, ...Object.values(porCategoria));
+  const bars = document.getElementById('barsCategoria');
+  const catsKeys = Object.keys(porCategoria);
+  bars.innerHTML = catsKeys.length ? '' : '<p class="empty">Sem dados ainda.</p>';
+  catsKeys.forEach(c=>{
+    const pct = (porCategoria[c]/max*100).toFixed(0);
+    bars.innerHTML += `<div class="bar-row">${emojiCategoria[c]||'💰'} ${c} — ${fmtMoeda(porCategoria[c])}<div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div></div>`;
+  });
+}
+
+async function addTransacao(){
+  const descricao = document.getElementById('descricao').value.trim();
+  const valor = parseFloat(document.getElementById('valor').value);
+  const categoria_id = parseInt(document.getElementById('categoria').value);
+  const diaVenc = document.getElementById('diaVenc').value;
+  const recorrente = document.getElementById('recorrente').checked;
+  if(!descricao || !valor) return;
+  await sb.from('transacoes_fin').insert({ usuario_id: currentUser.id, categoria_id, descricao, valor, is_recorrente: recorrente, dia_vencimento: diaVenc || null });
+  document.getElementById('descricao').value=''; document.getElementById('valor').value=''; document.getElementById('diaVenc').value=''; document.getElementById('recorrente').checked=false;
+  carregarFinanceiro();
+}
+async function removerTransacao(id){ await sb.from('transacoes_fin').delete().eq('id', id); carregarFinanceiro(); }
+
+sb.auth.getSession().then(({ data }) => {
+  if(data.session){ abrirApp(data.session.user); }
+});
+</script>
+</body>
+</html>
